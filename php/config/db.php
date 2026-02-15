@@ -2,12 +2,13 @@
 
 
 try {
+    
     $conn = new PDO(
-        "mysql:host=localhost;dbname=college_bus_routing",
-        "root",
-        ""
+        dsn: "mysql:host=localhost;dbname=college_bus",
+        username: "root",
+        password: ""
     );
-    $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $conn->setAttribute(attribute: PDO::ATTR_ERRMODE, value: PDO::ERRMODE_EXCEPTION);
 } catch (PDOException $e) {
     die("Database connection failed");
 }

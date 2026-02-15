@@ -53,7 +53,7 @@ const collegeIcon = L.icon({iconUrl:'https://maps.google.com/mapfiles/ms/icons/r
 // College marker
 L.marker([collegeLat, collegeLng], {icon:collegeIcon}).addTo(map).bindPopup("College");
 
-// Student marker & send location
+// Student marker & send location continuously
 let studentMarker;
 navigator.geolocation.watchPosition(pos => {
     studentLat = pos.coords.latitude;
@@ -74,28 +74,35 @@ navigator.geolocation.watchPosition(pos => {
         headers:{"Content-Type":"application/json"},
         body: JSON.stringify({lat: studentLat, lng: studentLng})
     });
-}, err => console.error(err), {enableHighAccuracy:true});
+}, err => alert("Location error: " + err.message), {enableHighAccuracy:true});
 
-// Fetch driver location
+// Bus marker and update in real-time
 let busMarker;
-function fetchBus(){
-    fetch("get_driver_location.php")
-        .then(res=>res.json())
-        .then(data=>{
-            busLat = data.lat;
-            busLng = data.lng;
-            if(busLat && busLng){
-                if(!busMarker){
-                    busMarker = L.marker([busLat, busLng], {icon:busIcon})
-                        .addTo(map)
-                        .bindPopup("Bus is coming");
-                } else {
-                    busMarker.setLatLng([busLat, busLng]);
-                }
+async function fetchBus(){
+    try {
+        const res = await fetch("get_driver_location.php");
+        const data = await res.json();
+        busLat = data.lat;
+        busLng = data.lng;
+
+        if(busLat && busLng){
+            if(!busMarker){
+                busMarker = L.marker([busLat, busLng], {icon:busIcon})
+                    .addTo(map)
+                    .bindPopup("Bus is coming");
+            } else {
+                busMarker.setLatLng([busLat, busLng]);
             }
-        });
+        }
+    } catch(e){
+        console.error("Failed to fetch bus location", e);
+    }
 }
+
+// Fetch bus location every 2 seconds
+fetchBus();
 setInterval(fetchBus, 2000);
+
 </script>
 
 </body>

@@ -21,7 +21,7 @@ if (isset($_POST['signup'])) {
         $signupError = "Invalid email format.";
     } elseif (strlen($password) < 6) {
         $signupError = "Password must be at least 6 characters.";
-    } elseif (!in_array($role, ['student', 'driver'])) {
+    } elseif (!in_array($role, ['student', 'driver', 'admin'])) {
         $signupError = "Invalid role selected.";
     } else {
 
@@ -32,6 +32,17 @@ if (isset($_POST['signup'])) {
         if ($stmt->fetch()) {
             $signupError = "Email already registered.";
         } else {
+            // TEMP: Prevent creating second admin
+            if ($role === 'admin') {
+                $stmt = $conn->prepare("SELECT id FROM users WHERE role='admin' LIMIT 1");
+                $stmt->execute();
+                if ($stmt->rowCount() > 0) {
+                    $signupError = "Admin account already exists.";
+                }
+            }
+        }
+
+        if (!$signupError) {
             $hashed = password_hash($password, PASSWORD_DEFAULT);
 
             $stmt = $conn->prepare(
@@ -72,6 +83,14 @@ if (isset($_POST['signup'])) {
             <option value="">-- Select Role --</option>
             <option value="student">Student</option>
             <option value="driver">Driver</option>
+            <?php 
+                // TEMP: Show admin option only if no admin exists
+                $stmt = $conn->prepare("SELECT id FROM users WHERE role='admin' LIMIT 1");
+                $stmt->execute();
+                if($stmt->rowCount() == 0){ 
+            ?>
+                <option value="admin">Admin</option>
+            <?php } ?>
         </select>
 
         <button type="submit" name="signup">Create Account</button>
